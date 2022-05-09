@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Autodesk Forge Viewer files (IMPORTANT) -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css">
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
+    <style>
+        /** Just simple CSS styling to make this page a little nicer **/
+            /** Viewing 3D models in web browser **/
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+  <!-- The Viewer will be instantiated here -->
+  <div id="forgeViewer"></div>
+  <!-- Custom script -->
+  <script>
+    var viewer;
+    var options = {
+        env: 'AutodeskProduction2',
+        api: 'derivativeV2_EU',  // for models uploaded to EMEA change this option to 'derivativeV2_EU'
+        getAccessToken: function(onTokenReady) {
+            //
+            // TODO: Replace static access token string below with call to fetch new token from your backend
+            // Both values are provided by Forge's Authentication (OAuth) API.
+            //
+            // Example Forge's Authentication (OAuth) API return value:
+            // {
+            //    "access_token": "<YOUR_APPLICATION_TOKEN>",
+            //    "token_type": "Bearer",
+            //    "expires_in": 86400
+            // }
+            //    
+            var token = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJjb2RlOmFsbCIsImRhdGE6d3JpdGUiLCJkYXRhOnJlYWQiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OmRlbGV0ZSIsImJ1Y2tldDpyZWFkIl0sImNsaWVudF9pZCI6Ik1FMm1MaUFwNk9ycWlBUEx4Q2hkd3hQRFVWYk5GVUs0IiwiYXVkIjoiaHR0cHM6Ly9hdXRvZGVzay5jb20vYXVkL2Fqd3RleHA2MCIsImp0aSI6Ik9sYW5iUG81d01qSHJNbXFjMFhUNzl6QlRzUHFERHBqc1l2N1BBS2tIVEtaaGw2VTU3UkRQRGdqQ3ZhVmFwQTUiLCJleHAiOjE2NTIwODk2MjR9.dHGvn3Se_qglfPkxcRz83q4Gyh4X1AziZMInThWYxTSmjn__-2h3fi0O0XOZ72vTQfOTJ3GVOaYRolWtxIfJegtXbI2thuIe9w8cLoH7g9q4J6nMS1kT_0qCkMkl0NIUk_iwhmqQ8bx2DQqN-Cu6ArjPHTYb-G0XapoottKKacytQ413A_stIZzlL2Ie7zHf1cxImLG_K-8Wh39Jg2O27HGWHWkUyi6I_R2QKnIIhmHfybGx9R9RQLrKCWHSw-lNM42j922fraJ4wxn3jei3a0jc4tTyv88WohbXsUyG0Lsj6BPQG2diW-H01P92tf4UgNJsjR0LKxoW3dqJllalvw';
+            var timeInSeconds = 3599; // Use value provided by Forge Authentication (OAuth) API
+            onTokenReady(token, timeInSeconds);
+        }
+    };
+            // Run this when the page is loaded
+    // var documentId = 'urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6amVkZGFidWNrZXQwMDEvSmVkZGFoX1N1cGVyX0RvbWVfRV8xMi0xXzAwMS56aXA';
+    Autodesk.Viewing.Initializer(options, function() {
+    
+        var htmlDiv = document.getElementById('forgeViewer');
+        viewer = new Autodesk.Viewing.GuiViewer3D(htmlDiv);
+        viewer.start();
+        if (startedCode > 0) {
+        console.error('Failed to create a Viewer: WebGL not supported.');
+        return;
+    }
+
+    console.log('Initialization complete, loading a model next...');
+
+});
+    var documentId = 'urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6amVkZGFidWNrZXQwMDEvSmVkZGFoX1N1cGVyX0RvbWVfRV8xMi0xXzAwMS56aXA';
+    Autodesk.Viewing.Document.load(documentId, onDocumentLoadSuccess, onDocumentLoadFailure);
+    
+    function onDocumentLoadSuccess(viewerDocument) {
+        var defaultModel = viewerDocument.getRoot().getDefaultGeometry();
+        viewer.loadDocumentNode(viewerDocument, defaultModel);
+       // var viewables = viewerDocument.getRoot().search({'type':'geometry'});
+       // viewer.loadDocumentNode(viewerDocument, viewables[0]);
+    
+    }
+    
+    function onDocumentLoadFailure() {
+        console.error('Failed fetching Forge manifest');
+    }
+    
+    
+    </script>
+</body>
+
+</html>
