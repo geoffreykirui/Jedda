@@ -43,6 +43,99 @@
             onTokenReady(token, timeInSeconds);
         }
     };
+
+    let clientId = "ME2mLiAp6OrqiAPLxChdwxPDUVbNFUK4"
+let clientSecret = "A43a96175089a4ca"
+
+var accessTokens = {
+  "1234": {
+    expiresAt: 3599,
+    accessToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJjb2RlOmFsbCIsImRhdGE6d3JpdGUiLCJkYXRhOnJlYWQiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OmRlbGV0ZSIsImJ1Y2tldDpyZWFkIl0sImNsaWVudF9pZCI6Ik1FMm1MaUFwNk9ycWlBUEx4Q2hkd3hQRFVWYk5GVUs0IiwiYXVkIjoiaHR0cHM6Ly9hdXRvZGVzay5jb20vYXVkL2Fqd3RleHA2MCIsImp0aSI6IjIxdDlCdjFVcnZJTkh6aVBveE9MelVDV2lIelRrNnUybzlpVG5LVWVDR3o0cE52dXMwbkNPUk94VGZqQUQ4QzQiLCJleHAiOjE2NTIwOTU2NTZ9.B4TiopALY_WNTQ6iDVTEB5PTVFd5HVgOx88UyvA3BzqJo31i7dy7YjcaeA715dSX-0Gzw-FqUHokXogNu60VxroTCrolnOcwP25dOLaioU4-qskzjrvIz9N7STaeFmLWMewDHYSCTZ_y5ZWvQheY9HhabKPzAVEfk-rbkCF2PfuhNNaVqTn7Xf1cK_YPaku156BDDivRF5FoOLh3yuqB_V3Jcbq9WqaeGME8-RkjvhfXK0VLBVKmDAfWgv9FMGwpHbtu-oxfqDfkuqEo9XPnacJd-G-epIC1gItEdq6ezscTi3pKaB3-mL2URojsNO3UEw3yx3pKdoVRJ5dvTvHMYQ",
+    refreshToken: "ehFoA6aZhwy6gfpsgV3yHm4bhscdaLON2zPovGRVdc"
+  }
+}
+
+var accessTokenPromises = {}
+
+function isExpired (token) {
+  return Date.now() > token.expiresAt
+}
+
+// funcId is used for debugging purposes
+function getAccessToken(userId, funcId) {
+  if (accessTokenPromises[userId]) {
+    console.log(`Return existing Promise for ${funcId}`)
+
+    return accessTokenPromises[userId]
+  }
+
+  accessTokenPromises[userId] = new Promise(async(resolve, reject) => {
+    console.log(`Created Promise for ${funcId}`)
+    if (accessTokens[userId]) {
+      if (isExpired(accessTokens[userId])) {
+        console.log(`Access token expired / ${funcId}`)
+        let body = `client_id=${clientId}&` +
+        `client_secret=${clientSecret}&` +
+        `grant_type=refresh_token&` +
+        `refresh_token=${accessTokens[userId].refreshToken}`
+        console.log(`Calling fetch() for ${funcId} with body = ${body}`)
+        fetch("	https://developer.api.autodesk.com/authentication/v1/refreshtoken", {
+          method: "post",
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: body
+        })
+        .then(res => res.json())
+        .then(json => {
+          console.log(json)
+          accessTokens[userId].accessToken = json.access_token
+          accessTokens[userId].refreshToken = json.refresh_token
+          // consider it expired a bit earlier (e.g. 60 seconds = 60,000 milliseconds)
+          accessTokens[userId].expiresAt = Date.now() + (json.expires_in * 1000) - 60000
+          delete accessTokenPromises[userId]
+          resolve(accessTokens[userId].accessToken)
+        })
+      } else {
+        console.log(`Use existing access token / ${funcId}`)
+        resolve(accessTokens[userId].accessToken)
+      }
+    } else {
+      reject("User needs to log in")
+    }
+  })
+
+  return accessTokenPromises[userId]
+}
+
+async function func1() {
+  console.log(`func1 calls for token`)
+
+  let accessToken = await getAccessToken("1234", "func1")
+  
+  console.log(`func1 got token = ${accessToken}`)
+}
+
+async function func2() {
+  console.log(`func2 calls for token`)
+
+  let accessToken = await getAccessToken("1234", "func2")
+
+  console.log(`func2 got token = ${accessToken}`)
+}
+
+async function main() {
+  console.log("Before calling functions")
+  func1()
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  func2()
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  func1()
+  console.log("After calling functions")
+}
+
+main()
+    
             // Run this when the page is loaded
     // var documentId = 'urn:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6amVkZGFidWNrZXQwMDEvSmVkZGFoX1N1cGVyX0RvbWVfRV8xMi0xXzAwMS56aXA';
     Autodesk.Viewing.Initializer(options, function() {
